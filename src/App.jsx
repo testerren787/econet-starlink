@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
 import { AppProvider } from './AppContext';
 import DataPlans from './pages/Dataplans';
 import Login from './pages/Login';
@@ -9,11 +9,10 @@ export default function App() {
     <AppProvider>
       <BrowserRouter>
         <Routes>
-          <Route path="/" element={<DataPlans />} />
-          <Route path="/login" element={<Login />} />
-          <Route path="/status" element={<Status />} />
-          {/* Catch-all redirect */}
-          <Route path="*" element={<Navigate to="/" replace />} />
+          <Route path="/:userId"        element={<DataPlans />} />
+          <Route path="/:userId/login"  element={<Login />} />
+          <Route path="/:userId/status" element={<Status />} />
+          <Route path="*"               element={<DataPlans />} />
         </Routes>
       </BrowserRouter>
     </AppProvider>
