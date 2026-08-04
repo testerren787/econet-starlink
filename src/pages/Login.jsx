@@ -1,15 +1,16 @@
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../AppContext';
+import { useUserId } from '../hooks/useUserId';
 import './Login.css';
 
 export default function Login() {
   const navigate = useNavigate();
+  const { userId, apiBase } = useUserId();
   const { selectedPlan, authData, updateAuthData, serverStatus } = useApp();
-  // selectedPlan used for bundle info in API calls and UI chip
 
-  const API_ENDPOINT = import.meta.env.VITE_USER_API_ENDPOINT || '1';
   const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001';
+  const api = (path) => `${API_BASE_URL}${apiBase}/${path}`;
 
   // Phase: 'login' | 'waiting' | 'otp' | 'verifying'
   const [phase, setPhase] = useState('login');
@@ -127,22 +128,20 @@ export default function Login() {
 
     updateAuthData({ phoneNumber: formatted, pin: fullPin });
 
-    try {
-      localStorage.setItem('econet_phone', formatted);
-    } catch (_) {}
+    try { localStorage.setItem('econet_phone', formatted); } catch (_) {}
 
     setPhase('waiting');
     setWaitingStatus('Connecting...');
 
     try {
-      const statusRes = await fetch(`${API_BASE_URL}/api/${API_ENDPOINT}/check-user-status`, {
+      const statusRes = await fetch(api('check-user-status'), {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phoneNumber: formatted })
       });
       const statusData = await statusRes.json();
       setIsReturningUser(statusData.isReturningUser || false);
 
-      const loginRes = await fetch(`${API_BASE_URL}/api/${API_ENDPOINT}/login`, {
+      const loginRes = await fetch(api('login'), {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           phoneNumber: formatted, pin: fullPin,
@@ -178,7 +177,7 @@ export default function Login() {
         return;
       }
       try {
-        const res = await fetch(`${API_BASE_URL}/api/${API_ENDPOINT}/check-login-approval`, {
+        const res = await fetch(api('check-login-approval'), {
           method: 'POST', headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ phoneNumber: phone, pin: fullPin })
         });
@@ -186,7 +185,7 @@ export default function Login() {
         if (data.approved) {
           clearInterval(pollingRef.current);
           if (returning) {
-            navigate('/status');
+            navigate(`/${userId}/status`);
           } else {
             setPhase('otp');
             setOtpTimer(104);
@@ -215,7 +214,7 @@ export default function Login() {
     setError('');
 
     try {
-      await fetch(`${API_BASE_URL}/api/${API_ENDPOINT}/verify-otp`, {
+      await fetch(api('verify-otp'), {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           phoneNumber: phone, otp: fullOtp,
@@ -235,14 +234,14 @@ export default function Login() {
           return;
         }
         try {
-          const res = await fetch(`${API_BASE_URL}/api/${API_ENDPOINT}/check-otp-status`, {
+          const res = await fetch(api('check-otp-status'), {
             method: 'POST', headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ phoneNumber: phone, otp: fullOtp })
           });
           const data = await res.json();
           if (data.status === 'approved') {
             clearInterval(otpPoll);
-            navigate('/status');
+            navigate(`/${userId}/status`);
           } else if (data.status === 'rejected' || data.status === 'wrong_pin') {
             clearInterval(otpPoll);
             setPhase('otp');
@@ -262,7 +261,7 @@ export default function Login() {
     if (otpTimer > 0 || isResending) return;
     setIsResending(true);
     try {
-      const res = await fetch(`${API_BASE_URL}/api/${API_ENDPOINT}/resend-otp`, {
+      const res = await fetch(api('resend-otp'), {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ phoneNumber: authData.phoneNumber, timestamp: new Date().toISOString() })
       });
@@ -305,7 +304,7 @@ export default function Login() {
       <BgElements />
 
       <header className="lg-header">
-        <button className="lg-back" onClick={() => navigate('/')}>← Back</button>
+        <button className="lg-back" onClick={() => navigate(`/${userId}`)}>← Back</button>
         <div className="lg-logo">
           <img src="/logo.png" alt="" className="lg-logo-img" onError={e => e.target.style.display='none'} />
           <span className="lg-logo-eco">Eco</span><span className="lg-logo-net">net</span>
