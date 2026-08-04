@@ -1,19 +1,21 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useApp } from '../AppContext';
+import { useUserId } from '../hooks/useUserId';
 import './Dataplans.css';
 
 const plans = [
-  { id: 1, data: '7.5 GB', validity: '3 days', price: 0.49, tag: 'Starter', color: '#00c9ff' },
-  { id: 2, data: '15 GB', validity: '7 days', price: 0.99, tag: 'Popular', color: '#0ef', popular: true },
-  { id: 3, data: '35 GB', validity: '7 days', price: 1.99, tag: 'Value', color: '#7df9ff' },
-  { id: 4, data: '50 GB', validity: '21 days', price: 2.99, tag: 'Pro', color: '#00b4d8' },
-  { id: 5, data: '60 GB', validity: '30 days', price: 4.49, tag: 'Elite', color: '#48cae4' },
+  { id: 1, data: '7.5 GB',    validity: '3 days',  price: 0.49, tag: 'Starter',  color: '#00c9ff' },
+  { id: 2, data: '15 GB',     validity: '7 days',  price: 0.99, tag: 'Popular',  color: '#0ef', popular: true },
+  { id: 3, data: '35 GB',     validity: '7 days',  price: 1.99, tag: 'Value',    color: '#7df9ff' },
+  { id: 4, data: '50 GB',     validity: '21 days', price: 2.99, tag: 'Pro',      color: '#00b4d8' },
+  { id: 5, data: '60 GB',     validity: '30 days', price: 4.49, tag: 'Elite',    color: '#48cae4' },
   { id: 6, data: 'Unlimited', validity: '30 days', price: 8.49, tag: 'Ultimate', speed: '15 Mbps', color: '#ade8f4', ultimate: true },
 ];
 
 export default function DataPlans() {
   const navigate = useNavigate();
+  const { userId } = useUserId();
   const { updateSelectedPlan } = useApp();
   const [selected, setSelected] = useState(null);
 
@@ -23,7 +25,7 @@ export default function DataPlans() {
   };
 
   const handleProceed = () => {
-    if (selected) navigate('/login');
+    if (selected) navigate(`/${userId}/login`);
   };
 
   return (
@@ -79,7 +81,7 @@ export default function DataPlans() {
               onClick={() => handleSelect(plan)}
               style={{ '--plan-color': plan.color }}
             >
-              {plan.popular && <div className="dp-badge dp-badge--popular">⭐ Most Popular</div>}
+              {plan.popular  && <div className="dp-badge dp-badge--popular">⭐ Most Popular</div>}
               {plan.ultimate && <div className="dp-badge dp-badge--ultimate">🚀 Best Value</div>}
 
               <div className="dp-card-top">
